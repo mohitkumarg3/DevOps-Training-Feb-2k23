@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: box-deploy
+  namespace: kubespace
+spec:
+  selector:
+    matchLabels:
+      app: box
+  replicas: 2
+  template: 
+    metadata:
+      labels:
+        app: box
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: country
+                operator: In
+                values:
+                - India
+      containers:
+      - name: box-container
+        image: bitbull/webserver
+        ports:
+        - containerPort: 80
+        env:
+        - name: User-name
+          valueFrom:
+            secretKeyRef:
+              name: box-secret
+              key: username
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: box-config
+              key: PORT

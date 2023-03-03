@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: box-data
+  namespace: kubespace
+spec:
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          initContainers:
+          - name: box-in
+            image: apline
+            command: ["/bin/sh", "-c"]
+            args:
+             - df -T -h > outbox.txt && mv outbox.txt /output;
+            volumeMounts:
+            - name: box-volume
+              mountPath: "/output"
+          containers:
+          - name: box-out
+            image: alpine
+            command: ["/bin/sh", "-c"]
+            args:
+             - cd output/ && cat outbox.txt;
+            volumeMounts:
+            - name: box-volume
+              mountPath: "/output"
+          volumes:
+          - name: box-volume
+            emptyDir: {}
+          restartPolicy: OnFailure
